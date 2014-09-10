@@ -11,11 +11,11 @@
 #define MAX_V 2048
 #define N 2 // 1:N matched pair
 #define INF numeric_limits<double>::infinity()
-
+// #define INF 100000
 using namespace std;
 
 
-typedef pair<int, int> Pair;
+typedef pair<double, int> Pair;
 struct edge
 {
     int to;
@@ -28,7 +28,8 @@ int V; // number of vertices
 vector<edge> graph[MAX_V]; // adjacency list of graph
 double h[MAX_V]; // potential
 double dist[MAX_V]; // minimum distance from s
-vector<int> prevv[MAX_V]; //previous vertex
+// vector<int> prevv[MAX_V]; //previous vertex
+int prevv[MAX_V];
 int preve[MAX_V]; // previous edge
 
 // add edge to graph
@@ -45,18 +46,17 @@ double min_cost_flow(int s, int t, int f)
     double ret = 0;
     fill(h, h + V, 0); // initialize h
 
-    prevv[t].push_back(0);
     while (f > 0)
     {
         // Dijkstra algorithm
-        priority_queue<Pair, vector<Pair>, greater<Pair> > queue;
+        priority_queue<Pair, vector<Pair>, greater<Pair> > que;
         fill(dist, dist + V, INF);
         dist[s] = 0;
-        queue.push(Pair(0, s));
-        while (!queue.empty())
+        que.push(Pair(0, s));
+        while (!que.empty())
         {
-            Pair p = queue.top();
-            queue.pop();
+            Pair p = que.top();
+            que.pop();
             int v = p.second;
             if (dist[v] < p.first)
                 continue;
@@ -67,9 +67,9 @@ double min_cost_flow(int s, int t, int f)
                 if (e.capacity > 0 && dist[e.to] > d)
                 {
                     dist[e.to] = d;
-                    prevv[e.to].push_back(v);
-                    preve[e.to] = 1;
-                    queue.push(Pair(dist[e.to], e.to));
+                    prevv[e.to] = v;
+                    preve[e.to] = i;
+                    que.push(Pair(dist[e.to], e.to));
                 }
             }
         }
@@ -83,13 +83,13 @@ double min_cost_flow(int s, int t, int f)
             h[v] += dist[v];
 
         int d = f;        
-        for (int v = t; v != s; v = prevv[v].back())
-            d = min(d, graph[prevv[v].back()][preve[v]].capacity);
+        for (int v = t; v != s; v = prevv[v])
+            d = min(d, graph[prevv[v]][preve[v]].capacity);
         f -= d;
         ret += d * h[t];
-        for (int v = t; v != s; v = prevv[v].back())
+        for (int v = t; v != s; v = prevv[v])
         {
-            edge &e = graph[prevv[v].back()][preve[v]];
+            edge &e = graph[prevv[v]][preve[v]];
             e.capacity -= d;
             graph[v][e.rev].capacity += d;
         }
@@ -133,51 +133,59 @@ int strcnt(char* buf, char* str, char eos)
     return count;
 }
 
-void loaddata(double* distance, char* buf, int row, int col, char sep)
+void loaddata(double* distance, char* buf, int n, int m, char sep)
 {
     char* bufptr = buf;
     char* bufptr2 = buf;
-    for (int i = 0; i < row; i++)
+    for (int i = 0; i < n; i++)
     {
-        bufptr2 = strchr(bufptr2, '\n');
-        for (int j = 0; bufptr < bufptr2; j++, bufptr = strchr(bufptr, sep) + 1)
-            distance[i * col + j] = atof(bufptr);
+        distance[i * m] = atof(++bufptr2);
+        bufptr2 = strchr(bufptr2, '\n');        
+        for (int j = 1; j < m ; j++)
+        {
+            if ((bufptr = strchr(bufptr, sep)))
+                distance[i * m + j] = atof(++bufptr);
+        }
     }
 }
 
 int main(int argc, char* argv[])
 {
     char* loadbuf = openfile(argv[1]);
-    int row = strcnt(loadbuf, "\n", '\0'); // number of cases
-    int col = strcnt(loadbuf, "\t", '\n') + 1; // number of controls
+    int n = strcnt(loadbuf, (char*)"\n", '\0'); // number of cases
+    int m = strcnt(loadbuf, (char*)"\t", '\n') + 1; // number of controls
 
-    printf("Case:    %d\n", row);
-    printf("Control: %d\n", col);
+    // printf("Case:    %d\n", n);
+    // printf("Control: %d\n", m);
 
-    double* distance = new double[row * col];
-    loaddata(distance, loadbuf, row, col, '\t');
+    double* distance = new double[n * m];
+    loaddata(distance, loadbuf, n, m, '\t');
 
     free(loadbuf);
 
-    int vstart = 0, vend = MAX_V - 1;
-    for (int i = 0; i < row; i++)
+    int s = n + m, t = s + 1;
+    V = t + 1;
+    for (int i = 0; i < n; i++)
     {
-        add_edge(vstart, i, 1, 0);
-        for (int j = 0; j < col; j++)
-        {
-            add_edge(i, j, 1, distance[i * col + j]);
-            add_edge(j, vend, N, 0);
-        }
+        add_edge(s, i, 2, 0);
+        for (int j = 0; j < m; j++)
+            add_edge(i, n + j, 1, distance[i * m + j]);
     }
+    for (int j = 0; j < m; j++)
+        add_edge(n + j, t, 1, 0);
+
 
     delete [] distance;
 
-    int mcost = min_cost_flow(vstart, vend, row);
-    for (int i = 0; i < col; i++)
+    double mcost = min_cost_flow(s, t, n * 2);
+    // printf("%f\n", mcost);
+    
+    for (int i = 0; i < n; i++)
     {
-        vector<int>::iterator begin = prevv[i].begin(), end = prevv[i].end();
-        for (; begin != end; ++begin)
-            printf("%d\t", *begin);
+        printf("%d\t", i + 1);
+        for (int j = 0; j < m; j++)
+            if (graph[n + j][i].capacity  == 1)
+                printf("%d\t", j + 1);
         putchar('\n');
     }
 
