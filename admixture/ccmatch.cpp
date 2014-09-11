@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <limits>
+#include <string>
 #include <vector>
 #include <queue>
 
@@ -9,11 +10,9 @@
 #define _FILE_OFFSET_BITS 64
 
 #define MAX_V 2048
-#define N 2 // 1:N matched pair
 #define INF numeric_limits<double>::infinity()
-// #define INF 100000
-using namespace std;
 
+using namespace std;
 
 typedef pair<double, int> Pair;
 struct edge
@@ -28,8 +27,7 @@ int V; // number of vertices
 vector<edge> graph[MAX_V]; // adjacency list of graph
 double h[MAX_V]; // potential
 double dist[MAX_V]; // minimum distance from s
-// vector<int> prevv[MAX_V]; //previous vertex
-int prevv[MAX_V];
+int prevv[MAX_V]; // previous vertex
 int preve[MAX_V]; // previous edge
 
 // add edge to graph
@@ -64,6 +62,7 @@ double min_cost_flow(int s, int t, int f)
             {
                 edge &e = graph[v][i];
                 double d = dist[v] + e.cost + h[v] - h[e.to];
+                if (dist[v] > d) d = dist[v]; // for rounding error
                 if (e.capacity > 0 && dist[e.to] > d)
                 {
                     dist[e.to] = d;
@@ -93,13 +92,15 @@ double min_cost_flow(int s, int t, int f)
             e.capacity -= d;
             graph[v][e.rev].capacity += d;
         }
-    }
 
+        printf("Progress... %d\r", f);
+    }
+    printf("\r\nDone.\n");
     return ret;
 }
 
 
-char* openfile(char* path)
+char* load_file(char* path)
 {
     FILE* fp = fopen(path, "rb");
     off_t filesize;
@@ -133,7 +134,7 @@ int strcnt(char* buf, char* str, char eos)
     return count;
 }
 
-void loaddata(double* distance, char* buf, int n, int m, char sep)
+void load_distance(double* distance, char* buf, int n, int m, char sep)
 {
     char* bufptr = buf;
     char* bufptr2 = buf;
@@ -151,43 +152,54 @@ void loaddata(double* distance, char* buf, int n, int m, char sep)
 
 int main(int argc, char* argv[])
 {
-    char* loadbuf = openfile(argv[1]);
-    int n = strcnt(loadbuf, (char*)"\n", '\0'); // number of cases
-    int m = strcnt(loadbuf, (char*)"\t", '\n') + 1; // number of controls
+    char* loadbuf = load_file(argv[1]);
+    int ncase = strcnt(loadbuf, (char*)"\n", '\0'); // number of cases
+    int ncontrol = strcnt(loadbuf, (char*)"\t", '\n') + 1; // number of controls
 
-    // printf("Case:    %d\n", n);
-    // printf("Control: %d\n", m);
+    int N = atoi(argv[2]);
 
-    double* distance = new double[n * m];
-    loaddata(distance, loadbuf, n, m, '\t');
+    printf("Case:    %d\n", ncase);
+    printf("Control: %d\n", ncontrol);
+
+    double* distance = new double[ncase * ncontrol];
+    load_distance(distance, loadbuf, ncase, ncontrol, '\t');
 
     free(loadbuf);
 
-    int s = n + m, t = s + 1;
+    int s = ncase + ncontrol, t = s + 1;
     V = t + 1;
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < ncase; i++)
     {
-        add_edge(s, i, 2, 0);
-        for (int j = 0; j < m; j++)
-            add_edge(i, n + j, 1, distance[i * m + j]);
+        add_edge(s, i, N, 0);
+        for (int j = 0; j < ncontrol; j++)
+            add_edge(i, ncase + j, 1, distance[i * ncontrol + j]);
     }
-    for (int j = 0; j < m; j++)
-        add_edge(n + j, t, 1, 0);
+    for (int j = 0; j < ncontrol; j++)
+        add_edge(ncase + j, t, 1, 0);
 
+    double mincost = min_cost_flow(s, t, ncase * N);
+    printf("Sum of Distances: %f\n", mincost);
+   
+    string output(argv[1]); 
+    output += ".ccmatch";
+    FILE* fp = fopen(output.c_str(), "w");
+    for (int i = 0; i < ncase; i++)
+    {
+        fprintf(fp, "%d\t", i + 1);
+        double sum = 0;
+        for (int j = 0; j < ncontrol; j++)
+        {
+            if (graph[ncase + j][i].capacity  == 1)
+            {
+                fprintf(fp, "%d\t", j + 1);
+                sum += distance[i * ncontrol + j];
+            }
+        }
+        fprintf(fp, "%f\n", sum);
+    }
 
+    fclose(fp);
     delete [] distance;
-
-    double mcost = min_cost_flow(s, t, n * 2);
-    // printf("%f\n", mcost);
-    
-    for (int i = 0; i < n; i++)
-    {
-        printf("%d\t", i + 1);
-        for (int j = 0; j < m; j++)
-            if (graph[n + j][i].capacity  == 1)
-                printf("%d\t", j + 1);
-        putchar('\n');
-    }
 
     return 0;
 }
