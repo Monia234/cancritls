@@ -21,7 +21,7 @@ do
     mv $filename.fam $filename.fam.old
     cut -d' ' -f1-5 $filename.fam.old | gawk -v i=$i '{print $0, i}' > $filename.fam  
     echo $file >> mergelist.txt
-    echo $filename | gawk -v i=$i 'OFS="\t"{print gensub(/hapmap3_r3_b36_fwd\.([A-Z]+)\.qc\.poly/,"\\1",""), i}' >> population.txt
+    echo $filename | gawk -v i=$i 'OFS="\t"{print i, gensub(/hapmap3_r3_b36_fwd\.([A-Z]+)\.qc\.poly/,"\\1","")}' >> population.txt
     i=`expr $i + 10`
 done
 
