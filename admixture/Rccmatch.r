@@ -11,6 +11,33 @@ Rccmatch <- function(admixture, fam, n, case.string = "2") {
     return (ret)
 }
 
+Rccmatch.naive <- function(x, N) {
+    df <- cbind(index = seq(ncol(x)), t(x))
+    matched <- rep(FALSE, ncol(x))
+    ret <- c()
+    for (i in 2:ncol(df)) {
+        sorted <- df[order(df[,i]),]    
+        pair <- c(i - 1)
+        sum = 0
+        for (j in 1:nrow(df)) {
+            if (!matched[sorted[j, 1]]) {
+                pair <- c(pair, sorted[j, 1])
+                matched[sorted[j, 1]] = TRUE
+                sum = sum + sorted[j, i]
+                if (length(pair) == N + 1) {
+                    pair <- c(pair, sum)
+                    break
+                }          
+            }      
+        }
+        ret <- rbind(ret, pair)
+    }
+    ret <- data.frame(ret)
+    colnames(ret) <- c("Case", paste("Control", seq(N), sep = ""), "Distance")
+    rownames(ret) <- seq(nrow(ret))
+    return (ret)
+}
+
 if (!interactive()) {
     args <- commandArgs(trailingOnly = T)
     if (length(args) >= 3) {
