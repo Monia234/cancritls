@@ -42,10 +42,9 @@ Rccmatch.naive <- function(x, fam, n, case.string = "2") {
         }
         ret <- rbind(ret, pair)
     }
-    ret <- data.frame(ret)
     colnames(ret) <- c("Case", paste("Control", seq(n), sep = ""), "Distance")
     rownames(ret) <- seq(nrow(ret))
-    return (ret)
+    return (data.frame(ret))
 }
 
 if (!interactive()) {
