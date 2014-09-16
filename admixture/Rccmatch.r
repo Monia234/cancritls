@@ -1,26 +1,30 @@
-Rccmatch <- function(x, fam, n, case.string = "2") {
+Rccmatch <- function(x, fam, n, case.string = "2", dist.method = "Euclidean") {
     require(proxy)
     require(Rcpp)
     sourceCpp("Rccmatch.cpp")
 
-    x.case <- x[fam[,6] == case.string,]
+    x.case <- x[fam[,6] == case.string & !is.na(fam[,6]),]
     if (nrow(x.case) == 0) stop("no case found.")
     x.control <- x[fam[,6] != case.string & !is.na(fam[,6]),]
     if (nrow(x.control) == 0) stop("no control found")
-    if (n < nrow(x.control) / nrow(x.case)) stop("ratio of case:control is less than n")
-    x.dist <- dist(x.control, x.case)
+    if (n > nrow(x.control) / nrow(x.case)) stop("ratio of case:control is less than n")
+    x.dist <- dist(x.case, x.control, method = dist.method)
 
     ret <- ccmatch(x.dist, n)
-    return (force(ret))
+    ret$Case <- which(fam[,6] == case.string & !is.na(fam[,6]))
+    for (i in 2:(ncol(ret) - 1)) {
+        ret[,i] <- which(fam[,6] != case.string & !is.na(fam[,6]))[ret[,i]]
+    }
+    return (ret)
 }
 
 Rccmatch.naive <- function(x, fam, n, case.string = "2") {
-    x.case <- x[fam[,6] == case.string,]
+    x.case <- x[fam[,6] == case.string & !is.na(fam[,6]),]
     if (nrow(x.case) == 0) stop("no case found.")
     x.control <- x[fam[,6] != case.string & !is.na(fam[,6]),]
     if (nrow(x.control) == 0) stop("no control found")
-    if (n < nrow(x.control) / nrow(x.case)) stop("ratio of case:control is less than n")
-    x.dist <- dist(x.control, x.case)
+    if (n > nrow(x.control) / nrow(x.case)) stop("ratio of case:control is less than n")
+    x.dist <- dist(x.case, x.control)
 
     df <- cbind(index = seq(ncol(x.dist)), t(x.dist))
     matched <- rep(FALSE, ncol(x.dist))
@@ -41,6 +45,10 @@ Rccmatch.naive <- function(x, fam, n, case.string = "2") {
             }
         }
         ret <- rbind(ret, pair)
+    }
+    ret[,1] <- which(fam[,6] == case.string & !is.na(fam[,6]))
+    for (i in 2:(ncol(ret) - 1)) {
+        ret[,i] <- which(fam[,6] != case.string & !is.na(fam[,6]))[ret[,i]]
     }
     colnames(ret) <- c("Case", paste("Control", seq(n), sep = ""), "Distance")
     rownames(ret) <- seq(nrow(ret))
