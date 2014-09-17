@@ -17,7 +17,7 @@ cancritls.saveplot <- function(file, ext, plot, width, height, dpi = 300) {
     }
 }
 
-admixture.plot <- function(admixture, label = "", population_label = NULL, sort = T, sort.keys = c(), savefile = "", ext = c("pdf"), print = T) {
+admixture.plot <- function(admixture, label = "", population_label = NULL, sort = T, sort.keys = c(), sort.descending = F, savefile = "", ext = c("pdf"), print = T) {
     require(reshape2)
     require(ggplot2)
   
@@ -28,10 +28,12 @@ admixture.plot <- function(admixture, label = "", population_label = NULL, sort 
     else colnames(admixture) <- paste("Pop", seq(ncol(admixture)), sep = "")
 
     if (sort) {
-        if (length(sort.keys) > 0) {
+        if (length(sort.keys) > 0 || sort.descending) {
             if (any(is.character(sort.keys))) sort.keys <- match(sort.keys, colnames(admixture))
-            admixture.order <- c(sort.keys, setdiff(seq(ncol(admixture)), sort.keys))
-            if (length(admixture.order) != ncol(admixture)) stop("sort.keys don't match existing columns")
+            if (sort.descending) s <- order(-apply(admixture, 2, sum))
+            else s <- seq(ncol(admixture))
+            admixture.order <- c(sort.keys, setdiff(s, sort.keys))
+            if (length(admixture.order) != ncol(admixture)) stop("sort.keys don't match existing columns.")
             else admixture <- admixture[,admixture.order]
         }
         admixture <- admixture[do.call(order, -admixture),]
