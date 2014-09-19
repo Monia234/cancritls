@@ -47,3 +47,13 @@ admixture.plot <- function(admixture, label = "", population_label = NULL, sort 
     if (savefile != "") cancritls.saveplot(file = savefile, ext = ext, plot = plt, width = 9.7, height = 6.4, dpi = 300)
 }
 
+kcv.plot <- function(kcv, label = "", savefile = "", ext = c("pdf"), print = T) {
+    require(ggplot2)
+  
+    if (label != "" & savefile == TRUE) savefile <- label
+    else if (savefile != "" & label == "") label <- savefile
+
+    plt <- ggplot(kcv, aes(x = K, y = CV)) + geom_line()
+    if (print) print(plt)
+    if (savefile != "") cancritls.saveplot(file = savefile, ext = ext, plot = plt, width = 9.7, height = 6.4, dpi = 300)
+}
