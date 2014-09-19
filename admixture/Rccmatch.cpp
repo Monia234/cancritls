@@ -113,7 +113,9 @@ DataFrame ccmatch(NumericMatrix x, int N) {
     for (int j = 0; j < ncontrol; j++)
         add_edge(ncase + j, t, 1, 0);
   
-    min_cost_flow(s, t, ncase * N);
+    double min_cost = min_cost_flow(s, t, ncase * N);
+    if (min_cost < 0)
+        return NULL;
     
     NumericMatrix mat(ncase, N + 2);
     for (int i = 0; i < ncase; i++)

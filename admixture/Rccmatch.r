@@ -1,30 +1,31 @@
-Rccmatch <- function(x, fam, n, case.string = "2", dist.method = "Euclidean") {
+Rccmatch.dist <- function(x, fam, n, case.string = "2") {
     require(proxy)
-    require(Rcpp)
-    sourceCpp("Rccmatch.cpp")
 
-    x.case <- x[fam[,6] == case.string & !is.na(fam[,6]),]
-    if (nrow(x.case) == 0) stop("no case found.")
-    x.control <- x[fam[,6] != case.string & !is.na(fam[,6]),]
-    if (nrow(x.control) == 0) stop("no control found")
-    if (n > nrow(x.control) / nrow(x.case)) stop("ratio of case:control is less than n")
-    x.dist <- dist(x.case, x.control, method = dist.method)
-
-    ret <- ccmatch(x.dist, n)
-    ret$Case <- which(fam[,6] == case.string & !is.na(fam[,6]))
-    for (i in 2:(ncol(ret) - 1)) {
-        ret[,i] <- which(fam[,6] != case.string & !is.na(fam[,6]))[ret[,i]]
-    }
-    return (ret)
-}
-
-Rccmatch.naive <- function(x, fam, n, case.string = "2") {
     x.case <- x[fam[,6] == case.string & !is.na(fam[,6]),]
     if (nrow(x.case) == 0) stop("no case found.")
     x.control <- x[fam[,6] != case.string & !is.na(fam[,6]),]
     if (nrow(x.control) == 0) stop("no control found")
     if (n > nrow(x.control) / nrow(x.case)) stop("ratio of case:control is less than n")
     x.dist <- dist(x.case, x.control)
+
+    return(x.dist)
+}
+
+Rccmatch <- function(x, fam, n, case.string = "2") {
+    require(Rcpp)
+    sourceCpp("Rccmatch.cpp")
+
+    x.dist <- Rccmatch.dist(x, fam, n, case.string)
+    ret <- ccmatch(x.dist, n)
+    ret$Case <- which(fam[,6] == case.string & !is.na(fam[,6]))
+    for (i in 2:(ncol(ret) - 1)) {
+       ret[,i] <- which(fam[,6] != case.string & !is.na(fam[,6]))[ret[,i]]
+    }
+    return (ret)
+}
+
+Rccmatch.naive <- function(x, fam, n, case.string = "2") {
+    x.dist <- Rccmatch.dist(x, fam, n, case.string)
 
     df <- cbind(index = seq(ncol(x.dist)), t(x.dist))
     matched <- rep(FALSE, ncol(x.dist))
