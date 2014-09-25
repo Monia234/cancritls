@@ -1,6 +1,7 @@
 Rccmatch.dist <- function(x, fam, n, case.string = "2") {
     require(proxy)
 
+    if (any(is.character(x))) stop("only numeric values are allowed")
     x.case <- x[fam[,6] == case.string & !is.na(fam[,6]),]
     if (nrow(x.case) == 0) stop("no case found.")
     x.control <- x[fam[,6] != case.string & !is.na(fam[,6]),]

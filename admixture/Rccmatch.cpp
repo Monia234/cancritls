@@ -30,6 +30,15 @@ double dist[MAX_V]; // minimum distance from s
 int prevv[MAX_V]; // previous vertex
 int preve[MAX_V]; // previous edge
 
+void init()
+{
+    fill(prevv, prevv + V, 0);
+    fill(preve, preve + V, 0);
+    fill(graph, graph + V, vector<edge>());
+    for (int i = 0; i < V; i++)
+        graph[i].clear();
+}
+
 // add edge to graph
 void add_edge(int from, int to, int capacity, double cost)
 {
@@ -104,6 +113,7 @@ DataFrame ccmatch(NumericMatrix x, int N) {
 
     int s = ncase + ncontrol, t = s + 1;
     V = t + 1;
+    init();
     for (int i = 0; i < ncase; i++)
     {
         add_edge(s, i, N, 0);
@@ -115,7 +125,10 @@ DataFrame ccmatch(NumericMatrix x, int N) {
   
     double min_cost = min_cost_flow(s, t, ncase * N);
     if (min_cost < 0)
+    {
+        puts("No solution found.");
         return NULL;
+    }
     
     NumericMatrix mat(ncase, N + 2);
     for (int i = 0; i < ncase; i++)
