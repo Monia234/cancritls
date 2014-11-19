@@ -22,7 +22,7 @@ def main():
     ptn = re.compile("chr([0-9]+)")
     gawk = "gawk -F' ' '{{if (NR == 1 || ({0} <= $4 && $4 <= {1})){{print $0}}}}' {2}"
 
-    for file in glob.glob(hapmapdir + "/*"):
+    for file in glob.glob(hapmapdir + "/*.*"):
         filename = os.path.basename(file)
         print(filename)
         chrom = ptn.findall(filename)
