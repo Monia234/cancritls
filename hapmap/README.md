@@ -22,3 +22,10 @@ Merge a given PLINK .bed file with selected populations in HapMap3.
 Usage: merge_hapmap3.sh /path/to/plinkbed /path/to/hapmap3 population ... 
 ```
 
+## convert2merlin.sh
+Convert a given HapMap dataset into merlin format (dat/map/ped).
+
+```{shell}
+Usage: convert2merlin.sh /path/to/hapmap template
+```
+
