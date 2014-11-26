@@ -8,6 +8,6 @@ do
     then
         filename=${f%.dat}
         echo $filename
-        mach -d $hapmapdir/$filename.dat -p $hapmapdir/$filename.ped --rounds 50 --states 200 --phase
+        mach -d $hapmapdir/$filename.dat -p $hapmapdir/$filename.ped --rounds 50 --states 200 --phase --prefix $filename
     fi
 done
