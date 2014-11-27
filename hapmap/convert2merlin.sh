@@ -1,6 +1,6 @@
-#/bin/sh
+#!/bin/sh
 
-hapmapdir=$1
+hapmapdir=${1%/*}
 template=$2
 
 for i in `ls $hapmapdir`
