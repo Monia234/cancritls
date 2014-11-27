@@ -29,3 +29,17 @@ Convert a given HapMap dataset into merlin format (dat/map/ped).
 Usage: convert2merlin.sh /path/to/hapmap template
 ```
 
+## convert2ped.sh
+Convert a given HapMap dataset into PLINK ped format (ped/map).
+
+```{shell}
+Usage: convert2ped.sh /path/to/hapmap
+```
+
+## qc4impute.sh
+Filter tri+allelic/monomorphic alleles for later imputation process.
+
+```{shell}
+Usage: qc4impute.sh /path/to/hapmap
+```
+
