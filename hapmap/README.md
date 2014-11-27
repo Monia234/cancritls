@@ -43,3 +43,13 @@ Filter tri+allelic/monomorphic alleles for later imputation process.
 Usage: qc4impute.sh /path/to/hapmap
 ```
 
+
+## Before Imputation Procedure
+
+0. Retrieve HapMap dataset
+1. QC: Run qc4impute.sh
+2. Divide into contig regions: Run split_contigs_b36.sh
+3. Convert to MERLIN format: Run convert2merlin.sh
+4. Phasing: Run phase.sh
+
+
