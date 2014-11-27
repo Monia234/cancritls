@@ -1,6 +1,6 @@
 #!/bin/sh
 
-hapmapdir=${1%/*}
+hapmapdir=${1%/}
 
 mkdir -p ped
 for i in `ls $hapmapdir`

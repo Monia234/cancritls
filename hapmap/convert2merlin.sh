@@ -9,7 +9,7 @@ usage: convert2merlin.sh /path/to/hapmap /path/to/template
 __EOS__
 }
 
-hapmapdir=${1%/*}
+hapmapdir=${1%/}
 template=$2
 
 if [ $# -lt 2 ]

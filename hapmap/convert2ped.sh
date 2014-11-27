@@ -1,8 +1,8 @@
 #!/bin/sh
 
-hapmapdir=${1%/*}
+hapmapdir=${1%/}
 
-for i in `ls $hapmapdir`
+for i in `ls -F $hapmapdir | grep -v /`
 do
     filename=${i%.txt}
     echo $filename
