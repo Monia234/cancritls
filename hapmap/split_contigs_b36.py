@@ -6,6 +6,10 @@ import sys
 import subprocess
 import re
 
+def usage():
+    print("Usage: split_contigs_b36.py /path/to/hapmap /path/to/contigs_file")
+    sys.exit(1)
+
 def parse_contigs(file):
     contigs = {}
     with open(file, 'r') as f:
@@ -15,8 +19,13 @@ def parse_contigs(file):
     return contigs
 
 def main():
-    hapmapdir = sys.argv[1]
-    contigs_file = sys.argv[2]
+    argv = sys.argv
+    argc = len(argv)
+    if argc <= 2:
+        usage()
+
+    hapmapdir = argv[1]
+    contigs_file = argv[2]
     contigs = parse_contigs(contigs_file)
 
     ptn = re.compile("chr([0-9]+)")
@@ -24,10 +33,10 @@ def main():
 
     for file in glob.glob(hapmapdir + "/*"):
         filename = os.path.basename(file)
-        print(filename)
         chrom = ptn.findall(filename)
         if (len(chrom) <= 0 or os.path.isdir(file)):
             continue
+        print(filename)
         chrom = chrom[0]
         for k, v in contigs[chrom].items():
             output = ptn.sub("chr"+k, filename)
