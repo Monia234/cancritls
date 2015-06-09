@@ -1,11 +1,13 @@
 #!/bin/bash
 
+CMDNAME=$(basename $0)
+
 warning() {
-    echo $1 1>&2
+    echo "$CMDNAME: $1" 1>&2
 }
 
 usage_exit () {
-    warning "Usage: $0 [-p pedname] [-m mapname] [-d delimiter] [-o prefix] [filename]"
+    warning "Usage: $CMDNAME [-p pedname] [-m mapname] [-d delimiter] [-o prefix] [filename]"
     exit 1
 }
 
@@ -22,9 +24,11 @@ done
 
 shift $((OPTIND - 1))
 
+set -e
+
 if [ -n "$1" ]
 then
-    FILENAME="${1%.*}"
+    FILENAME=$(basename $1)
     if [ -z "$PED" ]
     then
         PED="$FILENAME.ped"
@@ -55,6 +59,7 @@ fi
 if [ -r "$MAP" ]
 then
     awk '{OFS="\t"}{print "M",$2}' "$MAP" > "$PREFIX.merlin.dat"
+    cut -f2 -d "$DELIMITER" $PREFIX.merlin.dat > $PREFIX.merlin.snps
 else
     warning "Cannot Read $MAP."
     exit 1
