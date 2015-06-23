@@ -7,17 +7,17 @@ warning() {
 }
 
 usage_exit () {
-    warning "Usage: $CMDNAME [filename]"
-    warning "       -p, --ped [pedname]"
-    warning "       -m, --map [mapname]"
-    warning "       -d [delimiter]"
-    warning "       -o, --out [prefix]"
-    warning "       --rs"
+    echo "Usage: $CMDNAME [filename]" 1>&2
+    echo "       -p, --ped [pedname]" 1>&2
+    echo "       -m, --map [mapname]" 1>&2
+    echo "       -d [delimiter]" 1>&2
+    echo "       -o, --out [prefix]" 1>&2
+    echo "       --rs" 1>&2
     exit 1
 }
 
 OPT=$(getopt -o p:m:d:o: --long ped:,map:,out:,rs -- "$@")
-if [ $? != 0 ]
+if [ $? != 0  -o $# -lt 1 ]
 then
     usage_exit
 fi
@@ -79,7 +79,7 @@ if [ -r "$PED" ]
 then
     cut -f6 --complement -d "$DELIMITER" $PED > $PREFIX.merlin.ped
 else
-    warning "Cannot Read $PED."
+    warning "Cannot Read $PED"
     exit 1
 fi
 
@@ -93,7 +93,7 @@ then
     fi
     cut -f2 $PREFIX.merlin.dat > $PREFIX.merlin.snps
 else
-    warning "Cannot Read $MAP."
+    warning "Cannot Read $MAP"
     exit 1
 fi
 
