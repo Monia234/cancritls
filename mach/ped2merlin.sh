@@ -7,22 +7,50 @@ warning() {
 }
 
 usage_exit () {
-    warning "Usage: $CMDNAME [-p pedname] [-m mapname] [-d delimiter] [-o prefix] [filename]"
+    warning "Usage: $CMDNAME [filename]"
+    warning "       -p, --ped [pedname]"
+    warning "       -m, --map [mapname]"
+    warning "       -d [delimiter]"
+    warning "       -o, --out [prefix]"
+    warning "       --rs"
     exit 1
 }
 
-while getopts p:m:d:o: OPT
-do
-    case $OPT in
-        o) PREFIX="$OPTARG" ;;
-        p) PED="$OPTARG" ;;
-        m) MAP="$OPTARG" ;;
-        d) DELIMITER="$OPTARG" ;;
-        *) usage_exit ;;
-    esac
-done
+OPT=$(getopt -o p:m:d:o: --long ped:,map:,out:,rs -- "$@")
+if [ $? != 0 ]
+then
+    usage_exit
+fi
+eval set -- "$OPT"
 
-shift $((OPTIND - 1))
+while true
+do
+    case "$1" in
+        -o | --out)
+            PREFIX=$2
+            shift ;;
+        -p | --ped)
+            PED=$2
+            shift ;;
+        -m | --map)
+            MAP=$2
+            shift ;;
+        -d)
+            DELIMITER=$2
+            shift ;;
+        --rs)
+            RS_FLAG=1 ;;
+        --)
+            shift
+            break ;;
+        -*)
+            warning "Unrecognized Option $1"
+            usage_exit ;;
+        *)
+            usage_exit ;;
+    esac
+    shift
+done
 
 set -e
 
@@ -31,26 +59,25 @@ then
     FILENAME=$(basename $1)
     if [ -z "$PED" ]
     then
-        PED="$FILENAME.ped"
+        PED="$1.ped"
     fi
     if [ -z "$MAP" ]
     then
-        MAP="$FILENAME.map"
+        MAP="$1.map"
     fi
     if [ -z "$PREFIX" ]
     then
         PREFIX="$FILENAME"
     fi
 fi
+PREFIX=${PREFIX:-output}
+DELIMITER=${DELIMITER:-' '}
+RS_FLAG=${RS_FLAG:-0}
 
-if [ -z "$DELIMITER" ]
-then
-    DELIMITER=' '
-fi
 
 if [ -r "$PED" ]
 then
-    cut -f6 --complement -d "$DELIMITER" "$PED" > "$PREFIX.merlin.ped"
+    cut -f6 --complement -d "$DELIMITER" $PED > $PREFIX.merlin.ped
 else
     warning "Cannot Read $PED."
     exit 1
@@ -58,8 +85,13 @@ fi
 
 if [ -r "$MAP" ]
 then
-    awk '{OFS="\t"}{print "M",$2}' "$MAP" > "$PREFIX.merlin.dat"
-    cut -f2 -d "$DELIMITER" $PREFIX.merlin.dat > $PREFIX.merlin.snps
+    if [ $RS_FLAG -eq 1 ]
+    then
+        awk '{OFS="\t"}{print "M", $2}' $MAP > $PREFIX.merlin.dat
+    else
+        awk '{OFS="\t"}{print "M", $1":"$4}' $MAP > $PREFIX.merlin.dat
+    fi
+    cut -f2 $PREFIX.merlin.dat > $PREFIX.merlin.snps
 else
     warning "Cannot Read $MAP."
     exit 1
