@@ -1,0 +1,73 @@
+#!/bin/bash
+
+CMDNAME=$(basename $0)
+
+usage_exit () {
+    echo "Usage: $CMDNAME"
+    echo "       -p, --prefix [prefix]"
+    echo "       -J, --jobname [jobname]"
+    echo "       -q, --queue [queue]"
+    echo "       -w [dependency]"
+    echo "       -c, --cmd [comand]"
+    exit 1
+}
+
+
+OPT=$(getopt -o p:,J:,q:,w:,c: --long prefix:,jobname:,queue:,cmd: -- "$@")
+if [ $? != 0 ]
+then
+    usage_exit
+fi
+eval set -- "$OPT"
+
+while true
+do
+    case "$1" in
+    	-p | --prefix)
+            PREFIX=$2
+            shift ;;
+        -J | --jobname)
+            JOBNAME=$2
+            shift ;;
+        -q | --queue)
+            QUEUE=$2
+            shift ;;
+        -w)
+            DEPENDENCY=$2
+            shift ;;
+        -c | --cmd)
+            CMD=$2
+            shift ;;
+        --)
+            shift
+            break ;;
+    esac
+    shift
+done
+
+if [ -z $PREFIX ]
+then
+    usage_exit
+fi
+
+if [ -n $JOBNAME ]
+then
+    JOBNAME="-J $JOBNAME"
+fi
+
+if [ -n $DEPENDENCY]
+then
+    DEPENDENCY="-w $DEPENDENCY"
+fi
+
+QUEUE=${QUEUE:-sg_h}
+CMD=${CMD:-$@}
+
+echo $CMD
+
+bsub -o $PREFIX.stdout \
+     -e $PREFIX.stderr \
+     -q $QUEUE $JOBNAME \
+     "$CMD"
+
+
