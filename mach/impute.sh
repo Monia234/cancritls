@@ -169,7 +169,7 @@ then
         then
             cd chunkchromosome
             # awk '{OFS="\t"}{print "M", $1":"$4"}' ../$prefix.map > $prefix.merlin.dat
-            ChunkChromosome -d $prefix.merlin.dat -n $CHUNK_CHROMOSOME_LENGTH -o $CHUNK_CHROMOSOME_OVERLAP
+            ChunkChromosome -d ../$prefix.merlin.dat -n $CHUNK_CHROMOSOME_LENGTH -o $CHUNK_CHROMOSOME_OVERLAP
             cd ..
         fi
         echo ''
