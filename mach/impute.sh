@@ -45,7 +45,8 @@ usage_exit () {
 # get lsf jobid
 get_jobid () {
     output=$($*)
-    echo $output | head -n1 | cut -d'<' -f2 | cut -d'>' -f1
+    export OUTPUT=$output
+    echo $output | grep "^Job <[0-9]*>" | cut -d'<' -f2 | cut -d'>' -f1
 }
 
 # Error handling
@@ -194,9 +195,10 @@ then
             jobcmd="mach1 -d ../01_chunk/$prefix.merlin.dat -p ../01_chunk/$prefix.merlin.ped --rounds $MACH_ROUNDS --states $MACH_STATES --phase --interim 5 --sample 5 --prefix $prefix.haps $MACH_ARGS"
             if [ $SCHEDULER == "bsubp" ]
             then
-                jobid_[$prefix.mach1]=$(get_jobid bsubp -p $prefix.mach1 -J $prefix.mach1 $jobcmd)
+                jobid_[$prefix.mach1]=$(get_jobid bsub -o $prefix.mach1.stdout -e $prefix.mach1.stderr -J $prefix.mach1 -q sg_h "$jobcmd")
+                echo $OUTPUT
             else
-                eval $jobcmd
+                eval "$jobcmd"
             fi
         else
             for chunk in $(ls ../01_chunk/chunkchromosome/chunk*-$prefix.merlin.dat)
@@ -206,9 +208,10 @@ then
                 jobcmd="mach1 -d $chunk -p ../01_chunk/$prefix.merlin.ped --rounds $MACH_ROUNDS --states $MACH_STATES --phase --interim 5 --sample 5 --prefix $chunknum-$prefix.haps $MACH_ARGS"
                 if [ $SCHEDULER == "bsubp" ]
                 then
-                    jobid_[$prefix.$chunknum.mach1]=$(get_jobid bsubp -p $prefix.$chunknum.mach1 -J $prefix.$chunknum.mach1 $jobcmd)
+                    jobid_[$prefix.$chunknum.mach1]=$(get_jobid bsub -o $prefix.$chunknum.mach1.stdout -e $prefix.$chunknum.mach1.stderr -J $prefix.$chunknum.mach1 -q sg_h "$jobcmd")
+                    echo $OUTPUT
                 else
-                    eval $jobcmd
+                    eval "$jobcmd"
                 fi
             done
         fi
@@ -230,7 +233,7 @@ then
     do
         prefix=$PREFIX.chr$chr
         ref=$(echo $MINIMAC_VCF_REFERENCE | sed -e "s/@/$chr/")
-        if [ ! -r "$ref"]
+        if [ ! -r "$ref" ]
         then
             warning "Cannot Read $MINIMAC_VCF_REFERENCE."
             exit 1
@@ -241,9 +244,10 @@ then
             jobcmd="minimac2 --vcfReference --refHaps $ref --haps ../02_prephasing/$prefix.haps.gz --snps ../01_chunk/$prefix.merlin.snps --rounds $MINIMAC_ROUNDS --states $MINIMAC_STATES --prefix $prefix $MINIMAC_ARGS"
             if [ $SCHEDULER == "bsubp" ]
             then
-                jobid_[$prefix.minimac2]=$(get_jobid bsubp -p $prefix.minimac2 -J $prefix.minimac2 -w "done(${jobid_[$prefix.mach1]})" $jobcmd)
+                jobid_[$prefix.minimac2]=$(get_jobid bsub -o $prefix.minimac2.stdout -e $prefix.minimac2.stderr -J $prefix.minimac2 -q sg_h -w "done(${jobid_[$prefix.mach1]})" "$jobcmd")
+                echo $OUTPUT
             else
-                eval $jobcmd
+                eval "$jobcmd"
             fi
         else
             for chunk in $(ls ../01_chunk/chunkchromosome/chunk*-$prefix.merlin.dat)
@@ -253,9 +257,11 @@ then
                 jobcmd="minimac2 --vcfReference --refHaps $ref --haps ../02_prephasing/$chunknum-$prefix.haps.gz --snps ../01_chunk/chunkchromosome/$chunknum-$prefix.merlin.dat.snps --rounds $MINIMAC_ROUNDS --states $MINIMAC_STATES --prefix $chunknum-$prefix $MINIMAC_ARGS"
                 if [ $SCHEDULER == "bsubp" ]
                 then
-                    jobid_[$prefix.$chunknum.minimac2]=$(get_jobid bsubp -p $prefix.$chunknum.minimac2 -J $prefix.$chunknum.minimac2 -w "done(${jobid_[$prefix.$chunknum.mach1]})" $jobcmd)
+                    jobid_[$prefix.$chunknum.minimac2]=$(get_jobid bsub -o $prefix.$chunknum.minimac2.stdout -e $prefix.$chunknum.minimac2.stderr -J $prefix.$chunknum.minimac2 -q sg_h -w "done(${jobid_[$prefix.$chunknum.mach1]})" "$jobcmd")
+                    # bsubp -p $prefix.$chunknum.minimac2 -J $prefix.$chunknum.minimac2 "$jobcmd"
+                    echo $OUTPUT
                 else
-                    eval $jobcmd
+                    eval "$jobcmd"
                 fi
             done
         fi
@@ -265,4 +271,3 @@ then
 else
     echo "Skipped."
 fi
-
